@@ -22,7 +22,7 @@ var BeerSalesControl = React.createClass({
                 React.createElement(TickerControl, { data: this.state.data }),
                 React.createElement(PageHeaderControl),
                 React.createElement(PricingInformationControl, { data: this.state.data }),
-                React.createElement(PointOfSaleControl)
+                React.createElement(PointOfSaleControl, { data: this.state.data })
             )
         );
     }
@@ -88,22 +88,18 @@ var PricingRowControl = React.createClass({
         var Glyphicon = ReactBootstrap.Glyphicon;
         var item = this.props.children;
 
-        // Until added to API
-        item.min = "N/A";
-        item.max = "N/A";
-
         // Add Price Arrow
         var icon = "";
         if(item.price > item.basePrice)
-            icon = React.createElement(Glyphicon, { glyph: "arrow-up", style: {color: "red", margin: "0 5 0 0"}});
+            icon = React.createElement(Glyphicon, { glyph: "arrow-up", style: {color: "red", margin: "0 0 0 5"}});
         else
-            icon = React.createElement(Glyphicon, { glyph: "arrow-down", style: { color: "green", margin: "0 5 0 0"}});
+            icon = React.createElement(Glyphicon, { glyph: "arrow-down", style: { color: "green", margin: "0 0 0 5"}});
 
         // Build Row
         return (
             <tr>
                 <td>{item.name}</td>
-                <td>{icon}{item.price}</td>
+                <td>{item.price}{icon}</td>
                 <td>{item.basePrice}</td>
                 <td>{item.min}</td>
                 <td>{item.max}</td>
@@ -155,7 +151,7 @@ var TikerBeerItemControl = React.createClass({
         // Build Row
         return (
             <span>
-               {item.name}<span style={{color: priceColor}}> %{item.percentChange}</span>{icon}  
+               {item.name}<span style={{color: priceColor}}> %{item.percentchange}</span>{icon}  
             </span>
          );
     }
@@ -165,30 +161,27 @@ var TikerBeerItemControl = React.createClass({
 var PointOfSaleControl = React.createClass({
     render: function () {
         var Well = ReactBootstrap.Well,
+            FormGroup = ReactBootstrap.FormGroup,
             Button = ReactBootstrap.Button,
             Form = ReactBootstrap.Form,
-            FormGroup = ReactBootstrap.FormGroup,
-            FormControl = ReactBootstrap.FormControl,
-            ControlLabel = ReactBootstrap.ControlLabel;
+            Col = ReactBootstrap.Col;
+
+        // Builds the Rows
+        var formNodes = this.props.data.map(function (item) {
+            return (
+                React.createElement(PointOfSaleSubControl, { key: item.id }, item)
+              );
+        });
 
         return (<div>
                     <Well>
-                        <Form inline>
-                            <FormGroup controlId="formControlsBeer1">
-                                <ControlLabel>Beer 1</ControlLabel>
-                                {' '}
-                                <FormControl type="text" placeholder="Amount:" style={{width: '100px'}} />
+                        <Form horizontal>
+                            {formNodes}
+                            <FormGroup>
+                                <Col smOffset={7} sm={5}>
+                                    <Button type="submit"> Purchase </Button>
+                                </Col>
                             </FormGroup>
-                            {' '}
-                            <FormGroup controlId="formControlsBeer2">
-                                <ControlLabel>Beer 2</ControlLabel>
-                                {' '}
-                                <FormControl type="text" placeholder="Amount:" style={{width: '100px'}} />
-                            </FormGroup>
-                            {' '}
-                            <Button type="submit">
-                                Purchase
-                            </Button>
                         </Form>
                     </Well>
                 </div>
@@ -196,11 +189,57 @@ var PointOfSaleControl = React.createClass({
     }
 });
 
+var PointOfSaleSubControl = React.createClass({
+    getInitialState: function () {
+        return { amount: 0 }
+    },
+    onAddition: function () {
+        var value = this.state.amount;
+        value += 1;
+
+        this.setState({ amount: value });
+    },
+    onSubtraction: function () {
+        var value = this.state.amount;
+
+        if(value-1 >=0)
+            value -= 1;
+        else
+            value = 0;
+
+        this.setState({ amount: value });
+    },
+    render: function () {
+        var FormGroup = ReactBootstrap.FormGroup,
+            InputGroup = ReactBootstrap.InputGroup,
+            FormControl = ReactBootstrap.FormControl,
+            ControlLabel = ReactBootstrap.ControlLabel,
+            Button = ReactBootstrap.Button,
+            Col = ReactBootstrap.Col;
+
+        var item = this.props.children;
+        var controlId = "formControl" + item.name;
+
+        return (
+            <FormGroup controlId={controlId}>
+                <Col componentClass={ControlLabel} smOffset={3} sm={2}> {item.name} </Col>    
+                <Col sm={7}>
+                    <InputGroup>
+                        <Button onClick={this.onSubtraction}> - </Button>
+                        <Button onClick={this.onAddition}> + </Button>
+                        <FormControl type="text" value={this.state.amount} style={{ width: '100px', background:'white' }} readOnly/>
+                    </InputGroup>
+                </Col>
+            </FormGroup>
+            );
+    }
+});
+
 /* DOM RENDERER */
 ReactDOM.render(
     React.createElement(BeerSalesControl, {
-        url: "https://supplydemandwebapi20170217105813.azurewebsites.net/api/pos", pollInterval: 2000
+        url: "https://supplydemandwebapi20170217105813.azurewebsites.net/api/pos/custom", pollInterval: 2000
         /*submitUrl: "/comments/new",*/
     }),
     document.getElementById('beerContent')
-);
+); //"http://supplydemandwebapi20170217105813.azurewebsites.net/api/pos/custom""http://localhost:50826/api/pos/custom"
