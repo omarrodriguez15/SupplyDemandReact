@@ -149,7 +149,7 @@ var PointOfSaleControl = React.createClass({
 /* DOM RENDERER */
 ReactDOM.render(
     React.createElement(BeerSalesControl, {
-        url: "http://supplydemandwebapi20170217105813.azurewebsites.net/api/pos", pollInterval: 2000
+        url: "https://supplydemandwebapi20170217105813.azurewebsites.net/api/pos", pollInterval: 2000
         /*submitUrl: "/comments/new",*/
     }),
     document.getElementById('beerContent')
