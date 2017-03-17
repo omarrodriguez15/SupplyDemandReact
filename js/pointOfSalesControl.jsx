@@ -1,5 +1,37 @@
 /* POINT OF SALES CONTROL(S) */
 var PointOfSaleControl = React.createClass({
+    getInitialState: function () {
+        return { childCount: 0 }
+    },
+    onSubmit: function (){
+        var postData = [];
+        for(var i = 0; i < this.state.childCount; i++)
+        {
+            var child = this.refs['POSChild-' + i];
+            var item = child.getPostData();
+
+            if(item.AmountSold > 0)
+                postData.push(item);
+        }
+
+        this.onPostToServer(postData);
+    },
+    onPostToServer: function(data){
+        var request = new XMLHttpRequest();
+        request.open('POST', 'https://supplydemandwebapi20170217105813.azurewebsites.net/api/pos/multiple', true);
+        request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        request.onreadystatechange = function() {
+            if (request.readyState === 4) {
+                var response = JSON.parse(request.responseText);
+                if (request.status === 200 && response.status === 'OK') {
+                    console.log('successful');
+                } else {
+                    console.log('failed');
+                }
+            }
+        };
+        request.send(data);
+    },
     render: function () {
         var Well = ReactBootstrap.Well,
             FormGroup = ReactBootstrap.FormGroup,
@@ -8,11 +40,13 @@ var PointOfSaleControl = React.createClass({
             Col = ReactBootstrap.Col;
 
         // Builds the Rows
+        var index = 0;
         var formNodes = this.props.data.map(function (item) {
             return (
-                React.createElement(PointOfSaleSubControl, { key: item.id }, item)
+                React.createElement(PointOfSaleSubControl, { key: item.id, ref: "POSChild-" + index++, id: item.id }, item)
               );
         });
+        this.state.childCount = index;
 
         return (<div>
                     <Well>
@@ -20,7 +54,7 @@ var PointOfSaleControl = React.createClass({
                             {formNodes}
                             <FormGroup>
                                 <Col smOffset={7} sm={5}>
-                                    <Button type="submit"> Purchase </Button>
+                                    <Button type="submit" onClick={this.onSubmit}> Purchase </Button>
                                 </Col>
                             </FormGroup>
                         </Form>
@@ -32,7 +66,11 @@ var PointOfSaleControl = React.createClass({
 
 var PointOfSaleSubControl = React.createClass({
     getInitialState: function () {
-        return { amount: 0 }
+        return { amount: 0, id: 0 }
+    },
+    getPostData: function (value){
+        var item = {itemId: this.props.id, AmountSold: this.state.amount, time: Date.now()};
+        return item;
     },
     onAddition: function () {
         var value = this.state.amount;
